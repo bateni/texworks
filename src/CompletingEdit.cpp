@@ -1224,7 +1224,11 @@ void CompletingEdit::lineNumberAreaPaintEvent(QPaintEvent *event)
 	QAbstractTextDocumentLayout *layout = document()->documentLayout();
 	int top = layout->blockBoundingRect(block).top() - verticalScrollBar()->value();
 	int bottom = top + layout->blockBoundingRect(block).height();
-	
+
+	qreal real_bottom = bottom;
+
+	// We fix a bug here that would for long files lead to misalignment of line numbers
+	// and corresponding lines.  The problem originated from accruing rounding errors.
 	while (block.isValid() && top <= event->rect().bottom()) {
 		if (bottom >= event->rect().top()) {
 			QString number = QString::number(blockNumber);
@@ -1236,7 +1240,8 @@ void CompletingEdit::lineNumberAreaPaintEvent(QPaintEvent *event)
 		if (block == document()->end())
 			break;
 		top = bottom;
-		bottom = top + (int)layout->blockBoundingRect(block).height();
+		real_bottom += layout->blockBoundingRect(block).height();
+		bottom = (int)real_bottom;
 		++blockNumber;
 	}
 }
