@@ -808,7 +808,8 @@ void TWUtils::applyToolbarOptions(QMainWindow *theWindow, int iconSize, bool sho
 
 bool TWUtils::findNextWord(const QString& text, int index, int& start, int& end)
 {
-	// try to do a sensible "word" selection for TeX documents, taking account of the form of control sequences:
+        // We now think of ZWNJ as a letter, so that, e.g., it can be part of a completion prefix.
+        // try to do a sensible "word" selection for TeX documents, taking account of the form of control sequences:
 	// given an index representing a caret,
 	// if current char (following caret) is letter, apostrophe, or '@', extend in both directions
 	//    include apostrophe if surrounded by letters
@@ -829,7 +830,7 @@ bool TWUtils::findNextWord(const QString& text, int index, int& start, int& end)
 		return false;
 	QChar	ch = text.at(index);
 
-#define IS_WORD_FORMING(ch) (ch.isLetter() || ch.isMark())
+#define IS_WORD_FORMING(ch) (ch.isLetter() || ch.isMark() || ch == 0x200C)
 
 	bool isControlSeq = false; // becomes true if we include an @ sign or a leading backslash
 	bool includesApos = false; // becomes true if we include an apostrophe
