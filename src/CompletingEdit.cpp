@@ -861,18 +861,38 @@ void CompletingEdit::showCompletion(const QString& completion, int insOffset)
 	if (c->widget() != this)
 		return;
 
+	// MovePosition skips over ZWNJ, so the real lengths do not properly correspond
+	// to the visual length required by that call.
+	const ushort ch_zwnj = 0x200C;
+	int visualPrefixLength = 0;
+	int visualLength = 0;
+	int visualInsOffset = 0;
+	for (int i = 0; i < c->completionPrefix().length(); ++i) {
+	  ushort ucode = c->completionPrefix().at(i).unicode();
+	  if (ucode != ch_zwnj)
+	    visualPrefixLength++;
+	}
+	for (int i = 0; i < completion.length(); ++i) {
+	  ushort ucode = completion.at(i).unicode();
+	  if (ucode != ch_zwnj) {
+	    visualLength++;
+	    if (i < insOffset)
+	      visualInsOffset++;
+	  }
+	}
+	
 	QTextCursor tc = cmpCursor;
 	if (tc.isNull()) {
 		tc = textCursor();
-		tc.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, c->completionPrefix().length());
+		tc.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, visualPrefixLength);
 	}
 
 	tc.insertText(completion);
 	cmpCursor = tc;
-	cmpCursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, completion.length());
+	cmpCursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, visualLength);
 
 	if (insOffset != -1)
-		tc.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveAnchor, completion.length() - insOffset);
+	        tc.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveAnchor, visualLength - visualInsOffset);
 	setTextCursor(tc);
 
 	currentCompletionRange = cmpCursor;
