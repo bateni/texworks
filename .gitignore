@@ -1,3 +1,7 @@
+# Backup files
+*~
+~.swp
+
 # Files auto-generated during build.
 /src/DefaultBinaryPaths.h
 /src/GitRev.h
